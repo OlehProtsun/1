@@ -46,6 +46,7 @@
                     return response.json()
                 }
                 throw "Bad status" + response.status;
+                
              })
             .then(companies => {
                 select.innerHTML="";
