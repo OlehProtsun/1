@@ -238,9 +238,7 @@ public partial class MoviesDbContext : DbContext
         modelBuilder.Entity<MovieCompany>(entity =>
         {
             entity
-                .HasNoKey()
-                .ToTable("movie_company");
-
+                .HasKey(e => new { e.MovieId, e.CompanyId });
             entity.Property(e => e.CompanyId)
                 .HasDefaultValueSql("NULL")
                 .HasColumnType("INT")
@@ -249,9 +247,8 @@ public partial class MoviesDbContext : DbContext
                 .HasDefaultValueSql("NULL")
                 .HasColumnType("INT")
                 .HasColumnName("movie_id");
-
+            entity.ToTable("movie_company");
             entity.HasOne(d => d.Company).WithMany().HasForeignKey(d => d.CompanyId);
-
             entity.HasOne(d => d.Movie).WithMany().HasForeignKey(d => d.MovieId);
         });
 

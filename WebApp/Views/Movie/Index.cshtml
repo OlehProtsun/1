@@ -1,8 +1,10 @@
-@model IEnumerable<WebApp.Models.Movies.Movie>
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@model WebApp.Models.PagingList.PagingListAsync<WebApp.Models.Movies.Movie>
 
 @{
-    ViewData["Title"] = "Index";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+ViewData["Title"] = "Index";
+Layout = "~/Views/Shared/_Layout.cshtml";
+CancellationToken token = CancellationToken.None;
 }
 
 <h1>Index</h1>
@@ -12,91 +14,88 @@
 </p>
 <table class="table">
     <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Title)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Budget)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Homepage)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Overview)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Popularity)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.ReleaseDate)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Revenue)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Runtime)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.MovieStatus)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Tagline)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.VoteAverage)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.VoteCount)
-            </th>
-            <th></th>
-        </tr>
+    <tr>
+        <th>
+            @Html.DisplayNameFor(model => model.Data.GetAsyncEnumerator(token).Current.Title)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Data.GetAsyncEnumerator(token).Current.Budget)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Data.GetAsyncEnumerator(token).Current)
+        </th>
+        <th></th>
+    </tr>
     </thead>
     <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Title)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Budget)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Homepage)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Overview)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Popularity)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.ReleaseDate)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Revenue)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Runtime)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.MovieStatus)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Tagline)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.VoteAverage)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.VoteCount)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.MovieId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.MovieId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.MovieId">Delete</a>
-            </td>
-        </tr>
-}
+    @await foreach (var item in Model.Data) {
+    <tr>
+        <td>
+            @Html.DisplayFor(modelItem => item.Title)
+        </td>
+        <td class="text-end">
+            @Html.DisplayFor(modelItem => item.Budget)
+        </td>
+        <td>
+            @if (!string.IsNullOrEmpty(item.Homepage))
+            {
+            <a href=@item.Homepage>Link to home page</a>
+            }
+            else
+            {
+            <p>Brak</p>
+            }
+        </td>
+        <td>
+            <a asp-action="Edit" asp-route-id="@item.MovieId">Edit</a> |
+            <a asp-action="Details" asp-route-id="@item.MovieId">Details</a> |
+            <a asp-action="Delete" asp-route-id="@item.MovieId">Delete</a>
+        </td>
+    </tr>
+    }
     </tbody>
 </table>
+
+<nav aria-label="Books page navigation">
+    <ul class="pagination">
+        @if (Model.IsPrevious)
+        {
+        <li class="page-item">
+            <a class="page-link"
+               asp-controller="Movies"
+               asp-action="Index"
+               asp-route-page="@(Model.Page - 1)"
+               asp-route-size="@Model.Size">
+                Poprzednia
+            </a>
+        </li>
+        }
+        else
+        {
+        <li class="page-item disabled">
+            <a class="page-link">Poprzednia</a>
+        </li>
+        }
+        <li class="page-item disabled">
+            <a class="page-link" >@Model.Page</a>
+        </li>
+        @if (Model.IsNext)
+        {
+        <li class="page-item">
+            <a class="page-link"
+               asp-controller="Movies"
+               asp-action="Index"
+               asp-route-page="@(Model.Page + 1)"
+               asp-route-size="@Model.Size">
+                Następna
+            </a>
+        </li>
+        }
+        else
+        {
+        <li class="page-item disabled">
+            <a class="page-link">Następna</a>
+        </li>
+        }
+    </ul>
+</nav>

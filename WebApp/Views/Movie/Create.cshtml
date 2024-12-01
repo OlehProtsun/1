@@ -1,65 +1,71 @@
-@model CreateMovieModel
-
+@model MovieModel
+@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
 @{
-    ViewData["Title"] = "Create";
-    Layout = "~/Views/Shared/_Layout.cshtml";
 }
-
-<h1 xmlns="http://www.w3.org/1999/html">Create</h1>
-
-<h4>Movie</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="Title" class="control-label"></label>
-                <input asp-for="Title" class="form-control" />
-                <span asp-validation-for="Title" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="CompanyId" class="control-label"></label>
-                <select asp-for="CompanyId" class="form-control"></select>
-                <span asp-validation-for="CompanyId" class="text-danger"></span>
-                <input name="filter" id="filter" type="search" class="form-control mt-3"/>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
-            </div>
-        </form>
+<h1>Dodaj nowy film</h1>
+<form asp-controller="Movie" asp-action="Create" method="post">
+    <div class="form-group">
+        <label asp-for="Title"></label>
+        <span asp-validation-for="Title" class="text-danger"></span>
+        <input class="form-control" asp-for="Title" />
     </div>
-</div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
-@section Scripts
-{
-    <script>
-        const select = document.getElementById("CompanyId");
-        const filter = document.getElementById("filter");
-        filter.onchange = (e) => {
-            fetch(`/api/companies?fragment=${filter}`)
-            .then(response => {
-                if (response.ok){
-                    return response.json()
-                }
-                throw "Bad status" + response.status;
-                
-             })
-            .then(companies => {
-                select.innerHTML="";
-                for (let company of companies){
-                    const  option = document.createElement("option");
-                    option.value = company.companyID;
-                    option.innerText = company.companyName;
-                    select.appendChild(option);
-                }
-            })
-            .catch(e=> {
-                console.error("Api error", e);
-            });
+    <div class="form-group">
+        <label asp-for="Overview"></label>
+        <span asp-validation-for="Overview" class="text-danger"></span>
+        <textarea class="form-control" asp-for="Overview"></textarea>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="ReleaseDate"></label>
+        <span asp-validation-for="ReleaseDate" class="text-danger"></span>
+        <input class="form-control" asp-for="ReleaseDate" type="date"/>
+    </div>
+
+    <div class="form-group">
+        <label for="filter">Filtr producentów</label>
+        <input class="form-control mb-3" type="text" name="filter" id="filter"/>
+        <label asp-for="CompanyId"></label>
+        <select class="form-control mb-3" asp-for="CompanyId" id="CompanyId"></select>
+        <span asp-validation-for="CompanyId" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <button class="btn btn-primary" type="submit">Zapisz</button>
+    </div>
+</form>
+
+@section Scripts {
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        let select = document.getElementById("CompanyId");
+        let filter = document.getElementById("filter");
+        filter.onchange = function (e) {
+            if (filter.value.length == 0) {
+                return;
+            }
+            fetch(`/api/contacts?filter=${filter.value}`)
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    }
+                    throw "No OK, actual status " + response.status;
+                })
+                .then(json => {
+                    select.innerHTML = '';
+                    for (let item of json) {
+                        let option = document.createElement('option');
+                        option.setAttribute('value', item.id);
+                        option.innerText = item.title;
+                        select.appendChild(option);
+                    }
+                })
+                .catch(e => {
+                    console.log('Nie można pobrać danych z API', e);
+                });
         };
-    </script>
+    });
+</script>
 }

@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using WebApp.Models;
 using WebApp.Models.Movies;
 
 namespace WebApp.Controllers
@@ -19,19 +20,22 @@ namespace WebApp.Controllers
         }
 
         // GET: Movie
-        public async Task<IActionResult> Index(int page = 1, int size = 20)
+        public IActionResult Index(int page = 1, int size = 10)
         {
-            return View(
-                await _context
-                    .Movies
-                    .OrderByDescending(m=>m.Popularity)
-                    .Skip(size * (page-1))
-                    .Take(size)
-                    .AsNoTracking()
-                    .ToListAsync()
-                );
+            return View(PagingList.PagingListAsync<Movie>.Create(
+                (p, s) => 
+                    _context.Movies
+                        .OrderBy(b => b.Title)
+                        .Skip((p - 1) * s)
+                        .Take(s)
+                        .AsAsyncEnumerable(),
+                _context.Movies.Count(),
+                page,
+                size));
         }
 
+        
+        
         // GET: Movie/Details/5
         public async Task<IActionResult> Details(int? id)
         {
@@ -61,15 +65,29 @@ namespace WebApp.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("MovieId,Title,Budget,Homepage,Overview,Popularity,ReleaseDate,Revenue,Runtime,MovieStatus,Tagline,VoteAverage,VoteCount")] Movie movie)
+        public async Task<IActionResult> Create(
+            [Bind("Title, Overview, ReleaseDate, ProductionCompanyId")]
+            MovieModel model)
         {
             if (ModelState.IsValid)
             {
-                _context.Add(movie);
+                var entity = _context.Movies.Add(new Movie()
+                {
+                    MovieId = _context.Movies.Max(m => m.MovieId) + 1,
+                    Title = model.Title,
+                    Overview = model.Overview,
+                    ReleaseDate = model.ReleaseDate
+                });
+                _context.MovieCompanies.Add(new MovieCompany()
+                {
+                    CompanyId = model.CompanyId,
+                    MovieId = entity.Entity.MovieId
+                });
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            return View(movie);
+
+            return View(model);
         }
 
         // GET: Movie/Edit/5
